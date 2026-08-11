@@ -209,7 +209,7 @@ function make_thermal_json(inputs::Dict, macro_case::AbstractString, genx_stage_
         # co2cap = findfirst(inputs["dfCO2CapZones"][gen(y).zone,:].==1)
         co2cap = "co2_sink_nothing"
 
-        wacc, crp = get_wacc_and_crp(gen(y).resource, genx_stage_path)
+        wacc, crp, lifetime = get_wacc_and_crp(gen(y).resource, genx_stage_path)
 
         push!(thermal["ThermalPower"]["instance_data"],
             Dict(
@@ -243,7 +243,8 @@ function make_thermal_json(inputs::Dict, macro_case::AbstractString, genx_stage_
                         "startup_cost" => gen(y).start_cost_per_mw,
                         "startup_fuel_consumption" => conv_mmbtu_to_mwh * gen(y).start_fuel_mmbtu_per_mw,
                         "wacc" => wacc,
-                        "capital_recovery_period" => crp
+                        "capital_recovery_period" => crp,
+                        "lifetime" => lifetime
                     ),
                     "fuel_edge" => Dict(
                         "commodity" => fuel_type,

@@ -234,7 +234,7 @@ function make_hydro_json(inputs::Dict, setup::Dict, macro_case::AbstractString, 
             hydro_availability[!, Symbol(gen(y).resource)] = pmax
         end
 
-        wacc, crp = get_wacc_and_crp(gen(y).resource, genx_stage_path)
+        wacc, crp, lifetime = get_wacc_and_crp(gen(y).resource, genx_stage_path)
 
         push!(hydrores["hydro_res"]["instance_data"],
             Dict(
@@ -252,6 +252,9 @@ function make_hydro_json(inputs::Dict, setup::Dict, macro_case::AbstractString, 
                     "loss_fraction" => 0.0,
                     "max_duration" => gen(y).hydro_energy_to_power_ratio * in(y, inputs["HYDRO_RES_KNOWN_CAP"]),
                     "min_outflow_fraction" => gen(y).min_power,
+                    "wacc" => wacc,
+                    "capital_recovery_period" => crp,
+                    "lifetime" => lifetime
                 ),
                 "edges" => Dict(
                     "discharge_edge" => Dict(
@@ -271,7 +274,8 @@ function make_hydro_json(inputs::Dict, setup::Dict, macro_case::AbstractString, 
                         "ramp_up_fraction" => gen(y).ramp_up_percentage,
                         "variable_om_cost" => 0,
                         "wacc" => wacc,
-                        "capital_recovery_period" => crp
+                        "capital_recovery_period" => crp,
+                        "lifetime" => lifetime
                     ),
                     "inflow_edge" => Dict(
                         "availability" => gen_availability,
@@ -284,7 +288,10 @@ function make_hydro_json(inputs::Dict, setup::Dict, macro_case::AbstractString, 
                         "existing_capacity" => gen(y).existing_cap_mw,
                         "fixed_om_cost" => 0.0,
                         "annualized_investment_cost" => 0.0,
-                        "variable_om_cost" => 0.0
+                        "variable_om_cost" => 0.0,
+                        "wacc" => wacc,
+                        "capital_recovery_period" => crp,
+                        "lifetime" => lifetime
                     ),
                     "spill_edge" => Dict(
                         "commodity" => "Electricity",

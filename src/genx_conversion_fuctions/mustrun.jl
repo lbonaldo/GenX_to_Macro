@@ -139,7 +139,7 @@ function make_mustrun_json(inputs::Dict, macro_case::AbstractString, genx_stage_
             constraints_dict["MaxCapacityConstraint"] = true
         end
 
-        wacc, crp = get_wacc_and_crp(gen(y).resource, genx_stage_path)
+        wacc, crp, lifetime = get_wacc_and_crp(gen(y).resource, genx_stage_path)
 
         push!(mustrun["MustRun"]["instance_data"],
             Dict(
@@ -160,7 +160,8 @@ function make_mustrun_json(inputs::Dict, macro_case::AbstractString, genx_stage_
                         "min_capacity" => 0,
                         "variable_om_cost" => 0,
                         "wacc" => wacc,
-                        "capital_recovery_period" => crp
+                        "capital_recovery_period" => crp,
+                        "lifetime" => lifetime
                     )
                 )
             )

@@ -284,7 +284,7 @@ function make_storage_json(inputs::Dict, setup::Dict, macro_case::AbstractString
         end
 
         # Get multi stage inputs investment inputs
-        wacc, crp = get_wacc_and_crp(gen(y).resource, genx_stage_path)
+        wacc, crp, lifetime = get_wacc_and_crp(gen(y).resource, genx_stage_path)
 
         push!(storage["elec_stor"]["instance_data"],
             Dict(
@@ -307,7 +307,8 @@ function make_storage_json(inputs::Dict, setup::Dict, macro_case::AbstractString
                     "min_duration" => gen(y).min_duration,
                     "min_storage_level" => 0.0,
                     "wacc" => wacc,
-                    "capital_recovery_period" => crp
+                    "capital_recovery_period" => crp,
+                    "lifetime" => lifetime
                 ),
                 "edges" => Dict(
                     "discharge_edge" => Dict(
@@ -325,7 +326,8 @@ function make_storage_json(inputs::Dict, setup::Dict, macro_case::AbstractString
                         "min_capacity" => 0,
                         "variable_om_cost" => gen(y).var_om_cost_per_mwh,
                         "wacc" => wacc,
-                        "capital_recovery_period" => crp
+                        "capital_recovery_period" => crp,
+                        "lifetime" => lifetime
                     ),
                     "charge_edge" => Dict(
                         "start_vertex" => "elec_" * gen(y).region,
@@ -342,7 +344,8 @@ function make_storage_json(inputs::Dict, setup::Dict, macro_case::AbstractString
                         "min_capacity" => gen(y).min_charge_cap_mw,
                         "variable_om_cost" => gen(y).var_om_cost_per_mwh_in,
                         "wacc" => wacc,
-                        "capital_recovery_period" => crp
+                        "capital_recovery_period" => crp,
+                        "lifetime" => lifetime
                     ),
                 )
             )
