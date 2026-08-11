@@ -110,7 +110,6 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
         ),
         "instance_data" => [
             Dict("id" => "co2_sink_$cap",
-                "constraints" => Dict("CO2CapConstraint" => true),
                 "rhs_policy" => Dict("CO2CapConstraint" => sum(inputs["dfMaxCO2"][z, cap]
                                                                for z in findall(x -> x == 1, inputs["dfCO2CapZones"][:, cap])))
             )
@@ -121,7 +120,12 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
 
     push!(nodes["nodes"], Dict(
         "type" => "Electricity",
-        "global_data" => Dict("time_interval" => "Electricity"),
+        "global_data" => Dict(
+            "time_interval" => "Electricity",
+            "constraints" => Dict(
+                "BalanceConstraint" => false
+            ),
+        ),
         "instance_data" => [
             Dict(
                 "id" => "water_node",
@@ -249,10 +253,15 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
 
     push!(nodes["nodes"], Dict(
         "type" => "CO2",
-        "global_data" => Dict("time_interval" => "CO2"),
+        "global_data" => Dict(
+            "time_interval" => "CO2",
+            "constraints" => Dict(
+                "CO2CapConstraint" => true,
+                "BalanceConstraint" => false
+            ),
+        ),
         "instance_data" => [
             Dict("id" => "co2_sink_$cap",
-                "constraints" => Dict("CO2CapConstraint" => true),
                 "rhs_policy" => Dict("CO2CapConstraint" => sum(inputs["dfMaxCO2"][z, cap]
                                                                for z in findall(x -> x == 1, inputs["dfCO2CapZones"][:, cap])))
             )
@@ -263,8 +272,13 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
 
     push!(nodes["nodes"], Dict(
         "type" => "Electricity",
-        "global_data" => Dict("time_interval" => "Electricity"),
-        "instance_data" => [
+        "global_data" => Dict(
+            "time_interval" => "Electricity",
+            "constraints" => Dict(
+                "BalanceConstraint" => false
+            ),
+        ),
+        "instance_data" => [    
             Dict(
                 "id" => "water_node",
             )
