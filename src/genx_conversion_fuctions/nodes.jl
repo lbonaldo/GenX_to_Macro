@@ -41,8 +41,13 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
         if occursin("gas", f) || occursin("_NG", f)
             node_instance = Dict(
                 "id" => f,
-                "price" => Dict("timeseries" => Dict("path" => "system/fuel_prices.csv",
-                    "header" => f))
+                "supply" => Dict(
+                    "seg1" => Dict(
+                        "price" => Dict("timeseries" => Dict("path" => "system/fuel_prices.csv",
+                            "header" => f)
+                        )
+                    )
+                )
             )
             push!(nodes["nodes"][2]["instance_data"], node_instance)
         end
@@ -58,8 +63,13 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
         if occursin("uranium", f)
             node_instance = Dict(
                 "id" => f,
-                "price" => Dict("timeseries" => Dict("path" => "system/fuel_prices.csv",
-                    "header" => f))
+                "supply" => Dict(
+                    "seg1" => Dict(
+                        "price" => Dict("timeseries" => Dict("path" => "system/fuel_prices.csv",
+                            "header" => f)
+                        )
+                    )
+                )
             )
             push!(nodes["nodes"][3]["instance_data"], node_instance)
         end
@@ -75,8 +85,12 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
         if occursin("coal", f)
             node_instance = Dict(
                 "id" => f,
-                "price" => Dict("timeseries" => Dict("path" => "system/fuel_prices.csv",
-                    "header" => f))
+                "supply" => Dict(
+                    "seg1" => Dict(
+                        "price" => Dict("timeseries" => Dict("path" => "system/fuel_prices.csv",
+                            "header" => f))
+                    )
+                )
             )
             push!(nodes["nodes"][4]["instance_data"], node_instance)
         end
@@ -87,7 +101,13 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
 
     push!(nodes["nodes"], Dict(
         "type" => "CO2",
-        "global_data" => Dict("time_interval" => "CO2"),
+        "global_data" => Dict(
+            "time_interval" => "CO2",
+            "constraints" => Dict(
+                "CO2CapConstraint" => true,
+                "BalanceConstraint" => false
+            ),
+        ),
         "instance_data" => [
             Dict("id" => "co2_sink_$cap",
                 "constraints" => Dict("CO2CapConstraint" => true),
@@ -168,8 +188,13 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
         if occursin("gas", f) || occursin("_NG", f)
             node_instance = Dict(
                 "id" => f,
-                "price" => Dict("timeseries" => Dict("path" => string("system/fuel_prices_", stage_number, ".csv"),
-                    "header" => f))
+                "supply" => Dict(
+                    "seg1" => Dict(
+                        "price" => Dict("timeseries" => Dict("path" => string("system/fuel_prices_", stage_number, ".csv"),
+                            "header" => f)
+                        )
+                    )
+                )
             )
             push!(nodes["nodes"][2]["instance_data"], node_instance)
         end
@@ -185,8 +210,13 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
         if occursin("uranium", f)
             node_instance = Dict(
                 "id" => f,
-                "price" => Dict("timeseries" => Dict("path" => string("system/fuel_prices_", stage_number, ".csv"),
-                    "header" => f))
+                "supply" => Dict(
+                    "seg1" => Dict(
+                        "price" => Dict("timeseries" => Dict("path" => string("system/fuel_prices_", stage_number, ".csv"),
+                            "header" => f)
+                        )
+                    )
+                )
             )
             push!(nodes["nodes"][3]["instance_data"], node_instance)
         end
@@ -202,8 +232,13 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, macro_case::AbstractStr
         if occursin("coal", f)
             node_instance = Dict(
                 "id" => f,
-                "price" => Dict("timeseries" => Dict("path" => string("system/fuel_prices_", stage_number, ".csv"),
-                    "header" => f))
+                "supply" => Dict(
+                    "seg1" => Dict(
+                        "price" => Dict("timeseries" => Dict("path" => string("system/fuel_prices_", stage_number, ".csv"),
+                            "header" => f)
+                        )
+                    )
+                )
             )
             push!(nodes["nodes"][4]["instance_data"], node_instance)
         end
