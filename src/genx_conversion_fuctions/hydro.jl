@@ -234,7 +234,7 @@ function make_hydro_json(inputs::Dict, setup::Dict, macro_case::AbstractString, 
             hydro_availability[!, Symbol(gen(y).resource)] = pmax
         end
 
-        wacc, crp, lifetime = get_wacc_and_crp(gen(y).resource, genx_stage_path)
+        wacc, crp, lifetime, min_ret_cap = get_wacc_and_crp(gen(y).resource, genx_stage_path)
 
         push!(hydrores["hydro_res"]["instance_data"],
             Dict(
@@ -275,7 +275,8 @@ function make_hydro_json(inputs::Dict, setup::Dict, macro_case::AbstractString, 
                         "variable_om_cost" => 0,
                         "wacc" => wacc,
                         "capital_recovery_period" => crp,
-                        "lifetime" => lifetime
+                        "lifetime" => lifetime,
+                        "min_retired_capacity" => min_ret_cap
                     ),
                     "inflow_edge" => Dict(
                         "availability" => gen_availability,

@@ -246,15 +246,15 @@ function make_storage_json(inputs::Dict, setup::Dict, macro_case::AbstractString
             storage_constraints_dict["LongDurationStorageImplicitMinMaxConstraint"] = true
         end
 
-        if haskey(gen(y), "min_cap_mw") && gen(y).min_cap_mw>0
+        if haskey(gen(y), :min_cap_mw) && gen(y).min_cap_mw>0
             discharge_constraints_dict["MinCapacityConstraint"] = true
         end
 
-        if haskey(gen(y), "max_cap_mw") && gen(y).max_cap_mw>0
+        if haskey(gen(y), :max_cap_mw) && gen(y).max_cap_mw>0
             discharge_constraints_dict["MaxCapacityConstraint"] = true
         end
 
-        if haskey(gen(y), "min_cap_mwh") && gen(y).min_cap_mwh>0
+        if haskey(gen(y), :min_cap_mwh) && gen(y).min_cap_mwh>0
             storage_constraints_dict["MinCapacityConstraint"] = true
         end
 
@@ -284,7 +284,7 @@ function make_storage_json(inputs::Dict, setup::Dict, macro_case::AbstractString
         end
 
         # Get multi stage inputs investment inputs
-        wacc, crp, lifetime = get_wacc_and_crp(gen(y).resource, genx_stage_path)
+        wacc, crp, lifetime, min_ret_cap = get_wacc_and_crp(gen(y).resource, genx_stage_path)
 
         push!(storage["elec_stor"]["instance_data"],
             Dict(
@@ -327,7 +327,8 @@ function make_storage_json(inputs::Dict, setup::Dict, macro_case::AbstractString
                         "variable_om_cost" => gen(y).var_om_cost_per_mwh,
                         "wacc" => wacc,
                         "capital_recovery_period" => crp,
-                        "lifetime" => lifetime
+                        "lifetime" => lifetime,
+                        "min_retired_capacity" => min_ret_cap
                     ),
                     "charge_edge" => Dict(
                         "start_vertex" => "elec_" * gen(y).region,
