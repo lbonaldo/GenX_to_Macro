@@ -228,7 +228,7 @@ function make_hydro_json(inputs::Dict, setup::Dict, macro_case::AbstractString, 
             gen_availability = unique(pmax)
         else
             gen_availability = Dict("timeseries" => Dict(
-                "path" => "system/hydro_availability.csv",
+                "path" => string("system/hydro_availability_", stage_number, ".csv"),
                 "header" => gen(y).resource))
 
             hydro_availability[!, Symbol(gen(y).resource)] = pmax
@@ -308,6 +308,6 @@ function make_hydro_json(inputs::Dict, setup::Dict, macro_case::AbstractString, 
     end
 
     if !isempty(hydro_availability)
-        CSV.write(joinpath(macro_case, "system/hydro_availability.csv"), hydro_availability)
+        CSV.write(joinpath(macro_case, string("system/hydro_availability_", stage_number, ".csv")), hydro_availability)
     end
 end

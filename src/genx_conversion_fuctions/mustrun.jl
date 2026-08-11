@@ -122,7 +122,7 @@ function make_mustrun_json(inputs::Dict, macro_case::AbstractString, genx_stage_
             gen_availability = unique(pmax)
         else
             gen_availability = Dict("timeseries" => Dict(
-                "path" => "system/mustrun_availability.csv",
+                "path" => string("system/mustrun_availability_", stage_number, ".csv"),
                 "header" => gen(y).resource))
 
             mustrun_availability[!, Symbol(gen(y).resource)] = pmax;
@@ -173,7 +173,7 @@ function make_mustrun_json(inputs::Dict, macro_case::AbstractString, genx_stage_
     end
 
     if !isempty(mustrun_availability)
-        CSV.write(joinpath(macro_case, "system/mustrun_availability.csv"), mustrun_availability)
+        CSV.write(joinpath(macro_case, string("system/mustrun_availability_", stage_number, ".csv")), mustrun_availability)
     end
 
 end
