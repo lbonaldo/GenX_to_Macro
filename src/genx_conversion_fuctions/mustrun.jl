@@ -131,11 +131,11 @@ function make_mustrun_json(inputs::Dict, macro_case::AbstractString, genx_stage_
 
         constraints_dict = Dict("MustRunConstraint" => true)
 
-        if gen(y).min_cap_mw > 0
+        if haskey(gen(y), :min_cap_mw) && gen(y).min_cap_mw > 0
             constraints_dict["MinCapacityConstraint"] = true
         end
 
-        if gen(y).max_cap_mw >0
+        if haskey(gen(y), :max_cap_mw) && gen(y).max_cap_mw >0
             constraints_dict["MaxCapacityConstraint"] = true
         end
 

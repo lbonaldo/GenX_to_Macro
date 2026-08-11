@@ -198,7 +198,7 @@ function make_thermal_json(inputs::Dict, macro_case::AbstractString, genx_stage_
             constraints_dict["MinFlowConstraint"] = true
         end
 
-        if gen(y).min_cap_mw >0
+        if haskey(gen(y), :min_cap_mw) && gen(y).min_cap_mw >0
             constraints_dict["MinCapacityConstraint"] = true
         end
 

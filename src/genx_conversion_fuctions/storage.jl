@@ -246,17 +246,17 @@ function make_storage_json(inputs::Dict, setup::Dict, macro_case::AbstractString
             storage_constraints_dict["LongDurationStorageImplicitMinMaxConstraint"] = true
         end
 
-        # if gen(y).min_cap_mw>0
-        #     discharge_constraints_dict["MinCapacityConstraint"] = true
-        # end
+        if haskey(gen(y), "min_cap_mw") && gen(y).min_cap_mw>0
+            discharge_constraints_dict["MinCapacityConstraint"] = true
+        end
 
-        # if gen(y).max_cap_mw>0
-        #     discharge_constraints_dict["MaxCapacityConstraint"] = true
-        # end
+        if haskey(gen(y), "max_cap_mw") && gen(y).max_cap_mw>0
+            discharge_constraints_dict["MaxCapacityConstraint"] = true
+        end
 
-        # if gen(y).min_cap_mwh>0
-        #     storage_constraints_dict["MinCapacityConstraint"] = true
-        # end
+        if haskey(gen(y), "min_cap_mwh") && gen(y).min_cap_mwh>0
+            storage_constraints_dict["MinCapacityConstraint"] = true
+        end
 
         if gen(y).max_cap_mwh>0
             storage_constraints_dict["MaxCapacityConstraint"] = true
