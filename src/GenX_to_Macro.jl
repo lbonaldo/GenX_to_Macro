@@ -12,6 +12,7 @@ export make_commodities_json
 export make_timedata_json
 export make_nodes_json_demands_and_fuels
 export make_thermal_json
+export make_thermal_ccs_json
 export make_vre_json
 export make_mustrun_json
 export make_storage_json

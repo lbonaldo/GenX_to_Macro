@@ -37,6 +37,7 @@ for case_folder in stage_folders
     end
 
     thermal = make_thermal_json(inputs, macro_case_path, genx_stage_path)
+    thermal_ccs = make_thermal_ccs_json(inputs, macro_case_path, genx_stage_path)
     vre = make_vre_json(inputs, macro_case_path, genx_stage_path)
     storage = make_storage_json(inputs, setup, macro_case_path, genx_stage_path)
     transmission = make_transmission_json(inputs, macro_case_path, genx_stage_path)
