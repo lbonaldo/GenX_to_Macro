@@ -59,10 +59,20 @@ function check_supported(inputs::Dict, setup::Dict; warn::Bool = true)
               "losses, which Macro does not support; Macro takes a fixed loss percentage " *
               "(Trans_Loss_Segments = 1) or lossless lines (0).")
     end
+    gen = inputs["RESOURCES"]
+    resource_names(ids) = join((gen[y].resource for y in ids), ", ")
     multi_fuel = get(inputs, "MULTI_FUELS", Int[])
     if !isempty(multi_fuel)
-        names = join((inputs["RESOURCES"][y].resource for y in multi_fuel), ", ")
-        error("Multi-fuel resources cannot be converted: $names.")
+        error("Multi-fuel resources cannot be converted: $(resource_names(multi_fuel)).")
+    end
+    # GenX gives a biomass plant with CO2 capture negative emissions. In Macro that would be a
+    # negative flow on the plant's CO2 edge, which edges do not allow, so the plant could not run.
+    beccs = filter(y -> GenX.biomass(gen[y]) + GenX.co2_capture_fraction(gen[y]) > 1,
+        ccs_thermal(inputs))
+    if !isempty(beccs)
+        error("Plants with negative CO2 emissions (Biomass plus CO2_Capture_Fraction above 1) " *
+              "cannot be converted: $(resource_names(beccs)). A Macro CO2 edge cannot carry a " *
+              "negative flow.")
     end
     warn || return nothing
 
@@ -76,6 +86,24 @@ function check_supported(inputs::Dict, setup::Dict; warn::Bool = true)
         ["VRE_STOR", "FLEX", "ELECTROLYZER", "ALLAM_CYCLE_LOX"])
     isempty(resources) || @warn "These GenX resource types are not converted, so the " *
                                 "Macro case leaves them out: $(join(resources, ", "))."
+
+    # Only thermal plants get a fuel edge, so a converted resource of any other type loses its
+    # fuel use, and with it its CO2 emissions and capture.
+    unconverted = union(Int[], (inputs[k] for k in resources)...)
+    burns_fuel = filter(y -> GenX.heat_rate_mmbtu_per_mwh(gen[y]) > 0,
+        setdiff(get(inputs, "HAS_FUEL", Int[]), inputs["THERM_ALL"], unconverted))
+    isempty(burns_fuel) || @warn "Only thermal plants burn fuel in the Macro case, so these " *
+                                 "resources lose their fuel use, CO2 emissions and CO2 " *
+                                 "capture: $(resource_names(burns_fuel))."
+
+    features = String[]
+    isempty(get(inputs, "THERM_COMMIT_PWFU", Int[])) ||
+        push!(features, "piecewise fuel usage (plants use Heat_Rate_MMBTU_per_MWh instead)")
+    any(y -> get(gen[y], :maint, 0) == 1, inputs["THERM_ALL"]) && push!(features, "maintenance")
+    isempty(get(inputs, "RETROFIT_OPTIONS", Int[])) ||
+        push!(features, "retrofits (retrofit options become independent new plants)")
+    isempty(features) || @warn "These GenX thermal features are not converted: " *
+                               "$(join(features, ", "))."
     return nothing
 end
 

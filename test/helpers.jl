@@ -35,6 +35,26 @@ function set_setting!(case::AbstractString, file::AbstractString, key::AbstractS
     return nothing
 end
 
+"""
+    set_resource_values!(case, file, row, values...)
+
+Set columns of row `row` in resource file `file` of `case`, given as `column => value` pairs. A
+missing column is added, with `"None"` (for text) or zero in the other rows.
+"""
+function set_resource_values!(case::AbstractString, file::AbstractString, row::Integer,
+        values::Pair...)
+    path = joinpath(case, "resources", file)
+    df = CSV.read(path, DataFrame)
+    for (column, value) in values
+        if !hasproperty(df, column)
+            df[!, column] = fill(value isa AbstractString ? "None" : zero(value), nrow(df))
+        end
+        df[row, column] = value
+    end
+    CSV.write(path, df)
+    return nothing
+end
+
 "Convert a case into a fresh temporary folder, hiding GenX's console output; return the folder."
 function convert_case(case::AbstractString)
     out = joinpath(mktempdir(), "macro")

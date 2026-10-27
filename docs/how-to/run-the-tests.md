@@ -29,7 +29,7 @@ julia --project=. -e 'using GenX_to_Macro, GenX, CSV, DataFrames, JSON3, Logging
 | `test/test_utilities.jl` | the shared helpers: paths, fuels, CO2 sinks, availability, checks |
 | `test/test_single_stage.jl` | GenX examples 1 and 3: CO2 caps, line losses, CCS, storage, TDR |
 | `test/test_multistage.jl` | GenX example 6: per-stage files, line limits, investment data |
-| `test/test_unsupported.jl` | errors and warnings, and example 12's unusual network |
+| `test/test_unsupported.jl` | errors and warnings (BECCS, fuel on non-thermal resources, piecewise fuel, maintenance, retrofits), and example 12's unusual network |
 
 ## If a test fails because an example changed
 

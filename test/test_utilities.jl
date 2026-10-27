@@ -64,7 +64,8 @@ end
 end
 
 @testset "check_supported" begin
-    inputs = Dict("L" => 1, "MULTI_FUELS" => Int[], "RESOURCES" => [(resource = "gas",)])
+    inputs = Dict("L" => 1, "MULTI_FUELS" => Int[], "RESOURCES" => [(resource = "gas",)],
+        "THERM_ALL" => Int[], "CCS" => Int[])
     ok = Dict("CO2Cap" => 1, "Trans_Loss_Segments" => 1)
     @test check_supported(inputs, ok; warn = false) === nothing
     for cap in (2, 3)
