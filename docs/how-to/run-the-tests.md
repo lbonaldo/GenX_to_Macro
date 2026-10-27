@@ -1,7 +1,8 @@
 # How to run the tests
 
-The tests convert GenX's own example systems, taken from the installed GenX package, and
-check the Macro files against the GenX inputs. No solver is needed.
+The tests convert GenX's own example systems, taken from the installed GenX package, check
+the Macro files against the GenX inputs, and load each converted case in Macro, which builds
+every asset from its file. Nothing is solved, so no solver is needed.
 
 ## Run the whole suite
 
@@ -19,7 +20,7 @@ minute once the packages are compiled.
 While working on one part, load the helpers and run a single file:
 
 ```bash
-julia --project=. -e 'using GenX_to_Macro, GenX, CSV, DataFrames, JSON3, Logging, Test;
+julia --project=. -e 'using GenX_to_Macro, GenX, MacroEnergy, CSV, DataFrames, JSON3, Logging, Test;
     const G2M = GenX_to_Macro; include("test/helpers.jl");
     @testset "utilities" begin include("test/test_utilities.jl") end'
 ```
@@ -27,7 +28,7 @@ julia --project=. -e 'using GenX_to_Macro, GenX, CSV, DataFrames, JSON3, Logging
 | File | Covers |
 |---|---|
 | `test/test_utilities.jl` | the shared helpers: paths, fuels, CO2 sinks, availability, checks |
-| `test/test_single_stage.jl` | GenX examples 1 and 3: CO2 caps, line losses, CCS, storage, TDR |
+| `test/test_single_stage.jl` | GenX examples 1 and 3: CO2 caps, line losses, CCS, storage, TDR; hydro and must-run, added to example 1 |
 | `test/test_multistage.jl` | GenX example 6: per-stage files, line limits, investment data |
 | `test/test_unsupported.jl` | errors and warnings (BECCS, fuel on non-thermal resources, piecewise fuel, maintenance, retrofits), and example 12's unusual network |
 

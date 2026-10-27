@@ -1,5 +1,5 @@
 using GenX_to_Macro
-using GenX
+using GenX, MacroEnergy
 using CSV, DataFrames, JSON3
 using Logging, Test
 

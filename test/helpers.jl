@@ -64,6 +64,19 @@ function convert_case(case::AbstractString)
     return out
 end
 
+"""
+    load_in_macro(macro_case)
+
+Load a converted case in Macro without solving it, so every asset is built from its JSON: a
+wrong key, commodity or node id fails here even when the mapping tests pass.
+"""
+load_in_macro(macro_case::AbstractString) =
+    redirect_stdout(devnull) do
+        with_logger(NullLogger()) do
+            MacroEnergy.load_case(macro_case)
+        end
+    end
+
 "Load a GenX case's inputs quietly, as the converter does."
 load_quietly(case, inputs_path = case) =
     redirect_stdout(devnull) do

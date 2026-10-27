@@ -42,6 +42,9 @@ const MWH_PER_MMBTU = G2M.conv_mmbtu_to_mwh
     storage = instances(out, "assets/storage.json", :elec_stor)
     @test all(haskey(s[:edges][:charge_edge][:constraints], :StorageChargeLimitConstraint)
               for s in storage)
+
+    @test length(only(load_in_macro(out).systems).assets) ==
+          length(thermal) + length(lines) + length(storage) + length(inputs["VRE"])
 end
 
 @testset "Example 1: mass CO2 cap" begin
@@ -61,6 +64,7 @@ end
         r = inputs["RESOURCES"][findfirst(g -> g.resource == p[:id], inputs["RESOURCES"])]
         @test p[:edges][:co2_edge][:end_vertex] == G2M.co2_sink(inputs, r.zone)
     end
+    @test load_in_macro(out) isa MacroEnergy.Case
 end
 
 @testset "Example 3: carbon capture and a CO2 cap penalty" begin
@@ -94,6 +98,9 @@ end
     slack = read_csv(joinpath(case, "policies", "CO2_cap_slack.csv"))
     co2 = only(g for g in node_groups(out) if g[:type] == "CO2")
     @test [n[:price_unmet_policy][:CO2CapConstraint] for n in co2[:instance_data]] ≈ slack.PriceCap
+
+    system = only(load_in_macro(out).systems)
+    @test count(a -> a isa MacroEnergy.ThermalPowerCCS, system.assets) == length(inputs["CCS"])
 end
 
 @testset "Asymmetric storage" begin
@@ -119,6 +126,52 @@ end
     symmetric = storage[storage_csv.Resource[2]]
     @test !symmetric[:edges][:charge_edge][:has_capacity]
     @test haskey(symmetric[:storage][:constraints], :StorageSymmetricCapacityConstraint)
+    @test load_in_macro(out) isa MacroEnergy.Case
+end
+
+@testset "Hydro and must-run" begin
+    # No GenX example has either, so add one of each to example 1.
+    case = example_case("1_three_zones")
+    CSV.write(joinpath(case, "resources", "Hydro.csv"), DataFrame(
+        Resource = ["MA_hydro"], Zone = [1], New_Build = [0], Can_Retire = [0],
+        Existing_Cap_MW = [500.0], Min_Cap_MW = [0.0], Max_Cap_MW = [0.0],
+        Inv_Cost_per_MWyr = [0.0], Fixed_OM_Cost_per_MWyr = [40000.0],
+        Var_OM_Cost_per_MWh = [0.5], Min_Power = [0.1], Eff_Up = [1.0], Eff_Down = [0.9],
+        Hydro_Energy_to_Power_Ratio = [100.0], Ramp_Up_Percentage = [0.5],
+        Ramp_Dn_Percentage = [0.5], LDS = [0], region = ["MA"], cluster = [1]))
+    CSV.write(joinpath(case, "resources", "Must_run.csv"), DataFrame(
+        Resource = ["CT_must_run"], Zone = [2], New_Build = [0], Can_Retire = [0],
+        Existing_Cap_MW = [200.0], Min_Cap_MW = [0.0], Max_Cap_MW = [0.0],
+        Inv_Cost_per_MWyr = [0.0], Fixed_OM_Cost_per_MWyr = [100000.0],
+        Var_OM_Cost_per_MWh = [5.0], region = ["CT"], cluster = [1]))
+    variability_path = joinpath(case, "system", "Generators_variability.csv")
+    variability = read_csv(variability_path)
+    variability.MA_hydro = 0.3 .+ 0.2 .* sin.(variability.Time_Index ./ 500)
+    variability.CT_must_run = fill(0.9, nrow(variability))
+    CSV.write(variability_path, variability)
+    out = convert_case(case)
+    setup, inputs = load_quietly(case)
+
+    @test any(g -> g[:type] == "Electricity" && g[:instance_data][1][:id] == "water_node",
+        node_groups(out))
+    hydro = only(instances(out, "assets/hydro.json", :hydro_res))
+    @test hydro[:storage][:max_duration] == 100
+    @test hydro[:storage][:existing_capacity] == 100 * 500
+    @test hydro[:storage][:min_outflow_fraction] == 0.1
+    @test hydro[:edges][:discharge_edge][:efficiency] == 0.9
+    inflow = hydro[:edges][:inflow_edge]
+    @test inflow[:availability][:timeseries][:path] == "system/hydro_availability.csv"
+    @test read_csv(joinpath(out, "system", "hydro_availability.csv")).MA_hydro ≈
+          inputs["pP_Max"][findfirst(r -> r.resource == "MA_hydro", inputs["RESOURCES"]), :]
+
+    mustrun = only(instances(out, "assets/mustrun.json", :MustRun))[:edges][:elec_edge]
+    @test mustrun[:availability] == [0.9]
+    @test mustrun[:variable_om_cost] == 5
+    @test mustrun[:end_vertex] == "elec_CT"
+
+    system = only(load_in_macro(out).systems)
+    @test count(a -> a isa MacroEnergy.HydroRes, system.assets) == 1
+    @test count(a -> a isa MacroEnergy.MustRun, system.assets) == 1
 end
 
 @testset "No network expansion" begin

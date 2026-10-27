@@ -26,6 +26,7 @@
     @test length(system_data[:case]) == nstages
     @test [s[:assets][:path] for s in system_data[:case]] == ["assets/assets_$p" for p in 1:nstages]
     @test all(haskey(s, :locations) for s in system_data[:case])
+    @test length(load_in_macro(out).systems) == nstages
 
     for p in 1:nstages
         setup, inputs = load_quietly(case, joinpath(case, "inputs", "inputs_p$p"))

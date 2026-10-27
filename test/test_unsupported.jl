@@ -68,4 +68,5 @@ end
     @test length(lines) == inputs["L"]
     @test allunique(lines)
     @test any(occursin("_line", id) for id in lines)  # parallel lines carry their number
+    @test load_in_macro(out) isa MacroEnergy.Case
 end
