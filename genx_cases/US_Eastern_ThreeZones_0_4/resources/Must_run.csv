@@ -1,4 +1,0 @@
-Resource,Zone,LDS,New_Build,Existing_Cap_MW,Max_Cap_MW,Min_Cap_MW,Inv_Cost_per_MWyr,Fixed_OM_Cost_per_MWyr,Var_OM_Cost_per_MWh,VRE_Trans_Cost_per_MWyr,Heat_Rate_MMBTU_per_MWh,Fuel,NG_MMBtu_per_MWh,Cap_Size,Start_Cost_per_MW,Start_Fuel_MMBTU_per_MW,Start_NG_MMBTU_per_MW,Reg_Max,Rsv_Max,Reg_Cost,Rsv_Cost,MinCapTag,MGA,Resource_Type,region,cluster,LDS.1,CCS_Rate,Can_Retire
-MIDAT_small_hydroelectric_1,2,0,0,263.268,0.0,0,0.0,45648.0,0.0,0,0.0,None,0,1.236,0.0,0.0,0,0,0,0,0,0,0,small_hydroelectric,MIDAT,1,0,0.0,0
-NE_small_hydroelectric_1,3,0,0,834.494,0.0,0,0.0,45648.0,0.0,0,0.0,None,0,1.051,0.0,0.0,0,0,0,0,0,0,0,small_hydroelectric,NE,1,0,0.0,0
-SE_small_hydroelectric_1,1,0,0,249.895,0.0,0,0.0,45648.0,0.0,0,0.0,None,0,1.219,0.0,0.0,0,0,0,0,0,0,0,small_hydroelectric,SE,1,0,0.0,0
