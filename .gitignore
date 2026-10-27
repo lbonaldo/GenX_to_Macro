@@ -3,3 +3,4 @@ Manifest.toml
 # Never include output folders
 **/results*/
 **/TDR_results/
+genx_cases/*

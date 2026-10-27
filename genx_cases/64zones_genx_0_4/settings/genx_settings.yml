@@ -1,8 +1,0 @@
-#MacOrWindows: Mac  # Set to either "Mac" (also works for Linux) or "Windows" to ensure use of proper file directory separator "\" or "/
-NetworkExpansion: 1 # Transmission network expansionl; 0 = not active; 1 = active systemwide
-Trans_Loss_Segments: 1 # Number of segments used in piecewise linear approximation of transmission losses; 1 = linear, >2 = piecewise quadratic
-CO2Cap: 1 # CO2 emissions cap for power and/or energy system; 0 = not active (no CO2 emission limit); 1 = mass-based emission limit constraint; 2 = load + rate-based emission limit constraint; 3 = generation + rate-based emission limit constraint; 4 = emissions penalized via a carbon price
-UCommit: 2 # Unit committment of thermal power plants; 0 = not active; 1 = active using integer clestering; 2 = active using linearized clustering
-Solver: "Gurobi" # Solver to use; "gurobi" or "HiGHS"
-TimeDomainReduction: 1 # Time domain reduce (i.e. cluster) inputs based on Demand_data.csv, Generators_variability.csv, and Fuels_data.csv; 0 = not active (use input data as provided); 0 = active (cluster input data, or use data that has already been clustered)
-ParameterScale: 0 # Turn on parameter scaling wherein demand, capacity and power variables are defined in GW rather than MW. 0 = not active; 1 = active systemwide
