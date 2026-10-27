@@ -7,10 +7,13 @@ case), which must already exist since the inputs were read from the clustered da
 """
 function make_timedata_json(inputs::Dict, setup::Dict, commodities,
         genx_inputs_path::AbstractString, t::Target)
+    # Macro scales the subperiod weights to sum to TotalHoursModeled, as GenX's Sub_Weights do.
+    # The weights can sum to e.g. 8760.000000000002; Macro requires a whole number.
     time_data = Dict{String, Any}(
         "HoursPerSubperiod" => Dict{AbstractString, Int64}(c => inputs["H"] for c in commodities),
         "HoursPerTimeStep" => Dict{AbstractString, Int64}(c => 1 for c in commodities),
-        "NumberOfSubperiods" => inputs["REP_PERIOD"])
+        "NumberOfSubperiods" => inputs["REP_PERIOD"],
+        "TotalHoursModeled" => round(Int, sum(inputs["Weights"])))
 
     if setup["TimeDomainReduction"] == 1
         period_map = system_file(t, "Period_map", "csv")
@@ -18,8 +21,6 @@ function make_timedata_json(inputs::Dict, setup::Dict, commodities,
         isfile(source) || error("TimeDomainReduction is on but $source does not exist. " *
                                 "Run GenX's time domain reduction before converting.")
         cp(source, case_path(t, period_map); force = true)
-        # The weights can sum to e.g. 8760.000000000002; Macro requires a whole number.
-        time_data["TotalHoursModeled"] = round(Int, sum(inputs["Weights"]))
         time_data["SubPeriodMap"] = Dict("path" => period_map)
     end
 

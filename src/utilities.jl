@@ -54,6 +54,13 @@ function check_supported(inputs::Dict, setup::Dict; warn::Bool = true)
         error("CO2Cap = $(setup["CO2Cap"]) is a rate-based CO2 cap, which Macro does not " *
               "support. Only mass-based caps (CO2Cap = 1) or no cap (CO2Cap = 0) can be converted.")
     end
+    # With time domain reduction, Macro derives the subperiod weights from the period map, which
+    # gives GenX's weights. Without one, Macro weights every subperiod equally.
+    if setup["TimeDomainReduction"] != 1 && !allequal(inputs["Weights"])
+        error("The subperiods in Demand_data.csv have different Sub_Weights, but without time " *
+              "domain reduction there is no period map to carry them to Macro, which would " *
+              "weight every subperiod equally.")
+    end
     if inputs["L"] > 0 && setup["Trans_Loss_Segments"] >= 2
         error("Trans_Loss_Segments = $(setup["Trans_Loss_Segments"]) models quadratic line " *
               "losses, which Macro does not support; Macro takes a fixed loss percentage " *

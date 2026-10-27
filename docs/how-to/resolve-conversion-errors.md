@@ -11,6 +11,7 @@ no partial Macro case behind.
 | Message starts with | What to do |
 |---|---|
 | `CO2Cap = 2 is a rate-based CO2 cap` (or `3`) | Macro has only mass caps. Set `CO2Cap: 1` and give each cap as a mass (the `CO_2_Max_Mtons_*` columns of `CO2_cap.csv`, in million tonnes), or `CO2Cap: 0` for no cap. |
+| `The subperiods in Demand_data.csv have different Sub_Weights` | The demand data holds several representative periods with different weights, but `TimeDomainReduction` is off, so there is no period map to carry the weights to Macro. Let GenX cluster the data (`TimeDomainReduction: 1`), or give every subperiod the same weight. |
 | `Trans_Loss_Segments = 2 models quadratic line losses` | Set `Trans_Loss_Segments: 1` (fixed loss percentage) or `0` (lossless lines). |
 | `Multi-fuel resources cannot be converted` | Give each listed resource a single fuel. |
 | `Plants with negative CO2 emissions (Biomass plus CO2_Capture_Fraction above 1)` | These are bioenergy plants with carbon capture (BECCS). Macro models them with its `BECCSElectricity` asset, which the converter does not support yet. Remove the listed plants from the GenX case to convert it. |

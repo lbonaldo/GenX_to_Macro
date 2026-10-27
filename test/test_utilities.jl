@@ -65,9 +65,12 @@ end
 
 @testset "check_supported" begin
     inputs = Dict("L" => 1, "MULTI_FUELS" => Int[], "RESOURCES" => [(resource = "gas",)],
-        "THERM_ALL" => Int[], "CCS" => Int[])
-    ok = Dict("CO2Cap" => 1, "Trans_Loss_Segments" => 1)
+        "THERM_ALL" => Int[], "CCS" => Int[], "Weights" => [4380.0, 4380.0])
+    ok = Dict("CO2Cap" => 1, "Trans_Loss_Segments" => 1, "TimeDomainReduction" => 0)
     @test check_supported(inputs, ok; warn = false) === nothing
+    unequal = merge(inputs, Dict("Weights" => [5000.0, 3760.0]))
+    @test_throws r"different Sub_Weights" check_supported(unequal, ok; warn = false)
+    @test check_supported(unequal, merge(ok, Dict("TimeDomainReduction" => 1)); warn = false) === nothing
     for cap in (2, 3)
         @test_throws r"rate-based CO2 cap" check_supported(inputs, merge(ok, Dict("CO2Cap" => cap)); warn = false)
     end

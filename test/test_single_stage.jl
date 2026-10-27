@@ -14,6 +14,9 @@ const MWH_PER_MMBTU = G2M.conv_mmbtu_to_mwh
     @test !isfile(joinpath(out, "settings", "case_settings.json"))
     @test read_json(out, "system/commodities.json")[:commodities] == ["Electricity", "NaturalGas", "CO2"]
     @test !isfile(joinpath(out, "assets", "hydro.json"))  # no hydro in the case
+    time_data = read_json(out, "system/time_data.json")
+    @test time_data[:TotalHoursModeled] == round(Int, sum(inputs["Weights"]))  # also without TDR
+    @test !haskey(time_data, :SubPeriodMap)
 
     # Without a cap, every plant emits to the one uncapped CO2 node.
     co2 = only(g for g in node_groups(out) if g[:type] == "CO2")
