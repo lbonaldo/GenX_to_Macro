@@ -30,6 +30,12 @@ end
     end
     @test G2M.fuel_commodity("biomass") === nothing
     @test G2M.fuel_commodity("hydrogen") === nothing
+
+    # One log line for all the stages' fuels, including those with no commodity.
+    loaded = [(inputs = Dict("fuels" => ["hydrogen", "None", "MA_NG"]),),
+              (inputs = Dict("fuels" => ["MA_NG", "west_coal"]),)]
+    @test_logs (:info, "GenX fuels matched to Macro commodities: MA_NG -> NaturalGas, " *
+                       "hydrogen -> no commodity, west_coal -> Coal.") G2M.log_fuel_commodities(loaded)
 end
 
 @testset "CO2 sinks" begin

@@ -170,6 +170,20 @@ function warn_unsupported(loaded)
     return nothing
 end
 
+"""
+    log_fuel_commodities(loaded)
+
+Log once which Macro commodity each GenX fuel of the loaded stages was matched to. Fuels are
+matched by name, so this shows a name that matched the wrong commodity.
+"""
+function log_fuel_commodities(loaded)
+    fuels = sort(setdiff(union((s.inputs["fuels"] for s in loaded)...), ["None"]))
+    isempty(fuels) && return nothing
+    matched = ["$f -> $(something(fuel_commodity(f), "no commodity"))" for f in fuels]
+    @info "GenX fuels matched to Macro commodities: $(join(matched, ", "))."
+    return nothing
+end
+
 "Names of the resources `ids`, comma-separated."
 resource_names(inputs::Dict, ids) = join((inputs["RESOURCES"][y].resource for y in ids), ", ")
 

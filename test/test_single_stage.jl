@@ -5,7 +5,7 @@ const MWH_PER_MMBTU = G2M.conv_mmbtu_to_mwh
 
 @testset "Example 1: no CO2 cap, line losses" begin
     case = example_case("1_three_zones")
-    out = @test_logs (:warn, r"MinCapReq") match_mode = :any convert_case(case)
+    out = @test_logs (:warn, r"MinCapReq") (:info, r"fuels matched to Macro commodities: .*MA_NG -> NaturalGas") match_mode = :any convert_case(case)
     setup, inputs = load_quietly(case)
 
     system_data = read_json(out, "system_data.json")

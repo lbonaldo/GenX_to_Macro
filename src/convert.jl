@@ -33,6 +33,7 @@ function convert_genx_case(genx_case::AbstractString, macro_case::AbstractString
         (stage = stage, path = path, setup = setup, inputs = inputs)
     end
     warn_unsupported(loaded)
+    log_fuel_commodities(loaded)
     commodities = union((case_commodities(s.inputs) for s in loaded)...)
 
     make_macro_dir(macro_case, [s.stage for s in loaded])

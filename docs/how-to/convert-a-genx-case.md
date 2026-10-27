@@ -49,6 +49,10 @@ and optionally runs both models.
    the Macro case leaves out. If the conversion stops with an error instead, see
    [Resolve conversion errors and warnings](resolve-conversion-errors.md).
 
+   Also check the line `GenX fuels matched to Macro commodities`, for example
+   `MA_NG -> NaturalGas`. Fuels are matched by name, so an unusual fuel name can match the
+   wrong commodity.
+
 4. Check the output folder:
 
    - single-stage: `assets/<type>.json`, `system/*.json` and `system/*.csv`
