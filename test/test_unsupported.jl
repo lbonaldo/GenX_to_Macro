@@ -21,7 +21,7 @@ end
     CSV.write(fuels_path, fuels)
     set_resource_values!(case, "Thermal.csv", 1, "Fuel" => "hydrogen")
 
-    message = Regex("$(thermal.Resource[1]) uses fuel 'hydrogen'")
+    message = "$(thermal.Resource[1]) uses fuel 'hydrogen'"  # @test_throws checks it is in the error
     fresh = joinpath(mktempdir(), "macro")
     @test_throws message convert_quietly(case, fresh)
     @test !isdir(fresh)
