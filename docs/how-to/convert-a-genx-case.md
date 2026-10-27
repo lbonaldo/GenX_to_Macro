@@ -7,8 +7,6 @@ and optionally runs both models.
 
 - The repository's Julia environment is instantiated (`julia --project=. -e 'using Pkg;
   Pkg.instantiate()'`).
-- `Project.toml` takes GenX from the source under `[sources]`. If that is a local path that
-  does not exist on your machine, point it at your GenX checkout or a GenX git URL first.
 - The GenX case runs in GenX. If it uses time domain reduction (`TimeDomainReduction: 1`), the
   clustered data must already exist: run the case in GenX once, or set
   `TimeDomainReduction: 0`.
@@ -26,7 +24,11 @@ and optionally runs both models.
    output_case = "my_macro_case"   # created under genx_cases/
    run_genx = false                # true to run GenX after converting
    run_macro = false               # true to run Macro after converting
+   use_gurobi = false              # true to solve with Gurobi instead of HiGHS
    ```
+
+   Gurobi must be in your global Julia environment
+   (`julia -e 'using Pkg; Pkg.add("Gurobi")'`); HiGHS comes with GenX and Macro.
 
    and run it from the repository root:
 
@@ -57,8 +59,17 @@ and optionally runs both models.
 5. Run Macro on it, if the script has not already:
 
    ```julia
+   using MacroEnergy
+   MacroEnergy.run_case("genx_cases/my_macro_case")  # HiGHS
+   ```
+
+   With Gurobi, also pass Gurobi options: Macro's defaults are HiGHS options, which Gurobi
+   rejects.
+
+   ```julia
    using MacroEnergy, Gurobi
-   MacroEnergy.run_case("genx_cases/my_macro_case"; optimizer = Gurobi.Optimizer)
+   MacroEnergy.run_case("genx_cases/my_macro_case"; optimizer = Gurobi.Optimizer,
+       optimizer_attributes = ("Method" => 2, "Crossover" => -1))
    ```
 
    Results go to `results_001/` inside the Macro case, then `results_002/`, and so on.
