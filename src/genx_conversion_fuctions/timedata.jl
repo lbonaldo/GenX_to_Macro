@@ -17,13 +17,23 @@ function make_timedata_json(inputs::Dict, setup::Dict, commodities,
 
     if setup["TimeDomainReduction"] == 1
         period_map = system_file(t, "Period_map", "csv")
-        source = joinpath(genx_inputs_path, setup["TimeDomainReductionFolder"], "Period_map.csv")
-        isfile(source) || error("TimeDomainReduction is on but $source does not exist. " *
-                                "Run GenX's time domain reduction before converting.")
-        cp(source, case_path(t, period_map); force = true)
+        cp(period_map_source(setup, genx_inputs_path), case_path(t, period_map); force = true)
         time_data["SubPeriodMap"] = Dict("path" => period_map)
     end
 
     write_json(case_path(t, system_file(t, "time_data", "json")), time_data)
     return time_data
+end
+
+"""
+    period_map_source(setup, genx_inputs_path)
+
+GenX's period map in the time domain reduction folder of `genx_inputs_path`. Stops when it
+does not exist.
+"""
+function period_map_source(setup::Dict, genx_inputs_path::AbstractString)
+    source = joinpath(genx_inputs_path, setup["TimeDomainReductionFolder"], "Period_map.csv")
+    isfile(source) || error("TimeDomainReduction is on but $source does not exist. " *
+                            "Run GenX's time domain reduction before converting.")
+    return source
 end

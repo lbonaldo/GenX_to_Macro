@@ -38,10 +38,7 @@ function write_thermal(inputs::Dict, t::Target, ids, ccs::Bool)
     availability = DataFrame()
     for y in ids
         r = gen[y]
-        fuel_type = fuel_commodity(r.fuel)
-        fuel_type === nothing &&
-            error("$(r.resource) uses fuel '$(r.fuel)', which has no Macro commodity in the " *
-                  "converter; only natural gas, coal and uranium are supported.")
+        fuel_type = thermal_fuel(r)
 
         constraints = Dict("CapacityConstraint" => true, "RampingLimitConstraint" => true)
         if y in inputs["THERM_COMMIT"]

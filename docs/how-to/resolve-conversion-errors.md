@@ -4,7 +4,8 @@ The converter stops with an error when a GenX case uses something Macro cannot r
 warns when it leaves part of a case out. Find the message below and apply the fix.
 
 The converter checks every stage before writing anything, so a conversion that stops leaves
-no partial Macro case behind.
+no partial Macro case behind, and an existing Macro case in the output folder is left as it
+was.
 
 ## Errors
 

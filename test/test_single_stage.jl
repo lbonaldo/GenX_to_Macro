@@ -204,5 +204,7 @@ end
           read(joinpath(tdr, "Period_map.csv"), String)
 
     rm(joinpath(tdr, "Period_map.csv"))
-    @test_throws r"TimeDomainReduction is on" convert_case(case)
+    fresh = joinpath(mktempdir(), "macro")
+    @test_throws r"TimeDomainReduction is on" convert_quietly(case, fresh)
+    @test !isdir(fresh)
 end

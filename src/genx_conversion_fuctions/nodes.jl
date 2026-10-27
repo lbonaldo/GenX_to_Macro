@@ -36,7 +36,7 @@ function make_nodes_json_demands_and_fuels(inputs::Dict, setup::Dict, t::Target)
     CSV.write(case_path(t, demand_file), demand)
 
     # Fuel nodes, priced from the fuel price file. Fuels with no Macro commodity get no node;
-    # a thermal plant that burns one is rejected when the thermal assets are written.
+    # check_supported rejects a thermal plant that burns one.
     fuel_file = system_file(t, "fuel_prices", "csv")
     fuel_names = setdiff(inputs["fuels"], ["None"])
     for commodity in ("NaturalGas", "Uranium", "Coal")

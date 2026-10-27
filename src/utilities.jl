@@ -73,6 +73,12 @@ function check_supported(inputs::Dict, setup::Dict; warn::Bool = true)
     if !isempty(multi_fuel)
         error("Multi-fuel resources cannot be converted: $(resource_names(inputs, multi_fuel)).")
     end
+    # A thermal plant needs a fuel with a Macro commodity and a single CO2 node to emit to;
+    # thermal_fuel and co2_sink stop otherwise.
+    for y in inputs["THERM_ALL"]
+        thermal_fuel(gen[y])
+        co2_sink(inputs, gen[y].zone)
+    end
     # GenX gives a biomass plant with CO2 capture negative emissions. In Macro that would be a
     # negative flow on the plant's CO2 edge, which edges do not allow, so the plant could not run.
     beccs = filter(y -> GenX.biomass(gen[y]) + GenX.co2_capture_fraction(gen[y]) > 1,
@@ -166,6 +172,19 @@ end
 
 "Names of the resources `ids`, comma-separated."
 resource_names(inputs::Dict, ids) = join((inputs["RESOURCES"][y].resource for y in ids), ", ")
+
+"""
+    thermal_fuel(r)
+
+Macro commodity of thermal plant `r`'s fuel. Stops when the fuel has none.
+"""
+function thermal_fuel(r)
+    commodity = fuel_commodity(r.fuel)
+    commodity === nothing &&
+        error("$(r.resource) uses fuel '$(r.fuel)', which has no Macro commodity in the " *
+              "converter; only natural gas, coal and uranium are supported.")
+    return commodity
+end
 
 """
     fuel_commodity(fuel)

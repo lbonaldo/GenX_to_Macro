@@ -9,15 +9,33 @@
     @test !isdir(out)
 end
 
-@testset "Fuel without a Macro commodity" begin
+@testset "Fuel without a Macro commodity stops before writing" begin
     case = example_case("1_three_zones")
-    setup, inputs = load_quietly(case)
-    y = first(inputs["THERM_ALL"])
-    inputs["RESOURCES"][y].fuel = "hydrogen"
-    inputs["fuel_CO2"]["hydrogen"] = 0.0
-    out = mktempdir()
-    mkpath(joinpath(out, "assets")); mkpath(joinpath(out, "system"))
-    @test_throws r"uses fuel 'hydrogen'" make_thermal_json(inputs, setup, Target(out, nothing))
+    existing = convert_case(case)  # a Macro case converted before the fuel changes
+    before = snapshot(existing)
+
+    thermal = read_csv(joinpath(case, "resources", "Thermal.csv"))
+    fuels_path = joinpath(case, "system", "Fuels_data.csv")
+    fuels = read_csv(fuels_path)
+    fuels.hydrogen = fuels[!, thermal.Fuel[1]]
+    CSV.write(fuels_path, fuels)
+    set_resource_values!(case, "Thermal.csv", 1, "Fuel" => "hydrogen")
+
+    message = Regex("$(thermal.Resource[1]) uses fuel 'hydrogen'")
+    fresh = joinpath(mktempdir(), "macro")
+    @test_throws message convert_quietly(case, fresh)
+    @test !isdir(fresh)
+    @test_throws message convert_quietly(case, existing)
+    @test snapshot(existing) == before
+end
+
+@testset "Zone in two CO2 caps stops before writing" begin
+    case = example_case("1_three_zones"; CO2Cap = 1)
+    path = joinpath(case, "policies", "CO2_cap.csv")
+    write(path, replace(read(path, String), "MA,z1,1,0,0," => "MA,z1,1,1,0,"))
+    fresh = joinpath(mktempdir(), "macro")
+    @test_throws r"Zone 1 belongs to CO2 caps \[1, 2\]" convert_quietly(case, fresh)
+    @test !isdir(fresh)
 end
 
 @testset "Biomass plant with carbon capture stops before writing" begin
@@ -44,8 +62,10 @@ end
     setup, inputs = load_quietly(example_case("5_three_zones_w_piecewise_fuel"))
     @test_logs (:warn, r"piecewise fuel usage") match_mode = :any check_supported(inputs, setup)
 
+    # Example 9's retrofit options burn ammonia, which stops the conversion, so check the
+    # warning itself.
     setup, inputs = load_quietly(example_case("9_three_zones_w_retrofit"; CO2Cap = 1))
-    @test_logs (:warn, r"retrofits") match_mode = :any check_supported(inputs, setup)
+    @test any(contains("retrofits"), G2M.unsupported_warnings(inputs, setup))
 
     setup, inputs = load_quietly(example_case("1_three_zones"; MinCapReq = 0))
     @test_logs check_supported(inputs, setup)  # no features in use, no warning

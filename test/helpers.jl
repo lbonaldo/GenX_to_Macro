@@ -49,6 +49,8 @@ function set_resource_values!(case::AbstractString, file::AbstractString, row::I
         if !hasproperty(df, column)
             df[!, column] = fill(value isa AbstractString ? "None" : zero(value), nrow(df))
         end
+        # CSV reads short text as fixed-width strings, which a longer value does not fit.
+        value isa eltype(df[!, column]) || (df[!, column] = Vector{Any}(df[!, column]))
         df[row, column] = value
     end
     CSV.write(path, df)
@@ -63,6 +65,10 @@ convert_quietly(case::AbstractString, out::AbstractString) =
 
 "Convert a case into a fresh temporary folder, hiding GenX's console output; return the folder."
 convert_case(case::AbstractString) = convert_quietly(case, joinpath(mktempdir(), "macro"))
+
+"Contents of every file under `dir`, by path relative to it."
+snapshot(dir::AbstractString) = Dict(relpath(joinpath(root, f), dir) => read(joinpath(root, f))
+                                     for (root, _, files) in walkdir(dir) for f in files)
 
 """
     load_in_macro(macro_case)

@@ -9,8 +9,8 @@ in GenX, plus `case_settings.json` built from the GenX multi-stage settings. Any
 converted once.
 
 Every stage is loaded and checked before anything is written, so an unsupported feature stops
-the conversion without leaving a partial case behind. Warnings about what the Macro case leaves
-out are given once, naming the stages when not all have it.
+the conversion without leaving a partial case behind or changing an existing one. Warnings
+about what the Macro case leaves out are given once, naming the stages when not all have it.
 """
 function convert_genx_case(genx_case::AbstractString, macro_case::AbstractString)
     settings = GenX.configure_settings(
@@ -29,6 +29,7 @@ function convert_genx_case(genx_case::AbstractString, macro_case::AbstractString
     loaded = map(stages) do (stage, path)
         setup, inputs = load_genx_case(genx_case, path)
         check_supported(inputs, setup; warn = false)
+        setup["TimeDomainReduction"] == 1 && period_map_source(setup, path)
         (stage = stage, path = path, setup = setup, inputs = inputs)
     end
     warn_unsupported(loaded)
