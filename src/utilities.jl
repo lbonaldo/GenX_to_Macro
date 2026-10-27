@@ -44,8 +44,10 @@ end
 """
     check_supported(inputs, setup; warn = true)
 
-Stop on GenX features the converter cannot represent in Macro, and warn about GenX policies
-and resource types it leaves out, so a converted case is never silently different.
+Stop on GenX features the converter cannot represent in Macro, so a conversion fails before
+writing anything. With `warn`, also warn about what the Macro case leaves out or represents
+differently (see [`unsupported_warnings`](@ref)), so a converted case is never silently
+different.
 """
 function check_supported(inputs::Dict, setup::Dict; warn::Bool = true)
     # Macro has only a mass cap on a CO2 node (CO2CapConstraint); GenX's CO2Cap 2 and 3 are
@@ -67,10 +69,9 @@ function check_supported(inputs::Dict, setup::Dict; warn::Bool = true)
               "(Trans_Loss_Segments = 1) or lossless lines (0).")
     end
     gen = inputs["RESOURCES"]
-    resource_names(ids) = join((gen[y].resource for y in ids), ", ")
     multi_fuel = get(inputs, "MULTI_FUELS", Int[])
     if !isempty(multi_fuel)
-        error("Multi-fuel resources cannot be converted: $(resource_names(multi_fuel)).")
+        error("Multi-fuel resources cannot be converted: $(resource_names(inputs, multi_fuel)).")
     end
     # GenX gives a biomass plant with CO2 capture negative emissions. In Macro that would be a
     # negative flow on the plant's CO2 edge, which edges do not allow, so the plant could not run.
@@ -78,30 +79,48 @@ function check_supported(inputs::Dict, setup::Dict; warn::Bool = true)
         ccs_thermal(inputs))
     if !isempty(beccs)
         error("Plants with negative CO2 emissions (Biomass plus CO2_Capture_Fraction above 1) " *
-              "cannot be converted: $(resource_names(beccs)). A Macro CO2 edge cannot carry a " *
-              "negative flow.")
+              "cannot be converted: $(resource_names(inputs, beccs)). A Macro CO2 edge cannot " *
+              "carry a negative flow.")
     end
-    warn || return nothing
+
+    if warn
+        for message in unsupported_warnings(inputs, setup)
+            @warn message
+        end
+    end
+    return nothing
+end
+
+"""
+    unsupported_warnings(inputs, setup)
+
+Messages about the GenX settings, resources and features that the Macro case leaves out or
+represents differently.
+"""
+function unsupported_warnings(inputs::Dict, setup::Dict)
+    gen = inputs["RESOURCES"]
+    messages = String[]
 
     policies = filter(k -> get(setup, k, 0) != 0, ["MinCapReq", "MaxCapReq",
         "EnergyShareRequirement", "CapacityReserveMargin", "OperationalReserves",
         "HydrogenMinimumProduction", "HourlyMatchingRequirement", "DC_OPF",
         "DiscreteInvestments"])
-    isempty(policies) || @warn "These active GenX settings are not converted, so the " *
-                               "Macro case leaves them out: $(join(policies, ", "))."
+    isempty(policies) || push!(messages, "These active GenX settings are not converted, so " *
+                                         "the Macro case leaves them out: $(join(policies, ", ")).")
     resources = filter(k -> !isempty(get(inputs, k, Int[])),
         ["VRE_STOR", "FLEX", "ELECTROLYZER", "ALLAM_CYCLE_LOX"])
-    isempty(resources) || @warn "These GenX resource types are not converted, so the " *
-                                "Macro case leaves them out: $(join(resources, ", "))."
+    isempty(resources) || push!(messages, "These GenX resource types are not converted, so " *
+                                          "the Macro case leaves them out: $(join(resources, ", ")).")
 
     # Only thermal plants get a fuel edge, so a converted resource of any other type loses its
     # fuel use, and with it its CO2 emissions and capture.
     unconverted = union(Int[], (inputs[k] for k in resources)...)
     burns_fuel = filter(y -> GenX.heat_rate_mmbtu_per_mwh(gen[y]) > 0,
         setdiff(get(inputs, "HAS_FUEL", Int[]), inputs["THERM_ALL"], unconverted))
-    isempty(burns_fuel) || @warn "Only thermal plants burn fuel in the Macro case, so these " *
-                                 "resources lose their fuel use, CO2 emissions and CO2 " *
-                                 "capture: $(resource_names(burns_fuel))."
+    isempty(burns_fuel) || push!(messages, "Only thermal plants burn fuel in the Macro case, " *
+                                           "so these resources lose their fuel use, CO2 " *
+                                           "emissions and CO2 capture: " *
+                                           "$(resource_names(inputs, burns_fuel)).")
 
     features = String[]
     isempty(get(inputs, "THERM_COMMIT_PWFU", Int[])) ||
@@ -109,10 +128,44 @@ function check_supported(inputs::Dict, setup::Dict; warn::Bool = true)
     any(y -> get(gen[y], :maint, 0) == 1, inputs["THERM_ALL"]) && push!(features, "maintenance")
     isempty(get(inputs, "RETROFIT_OPTIONS", Int[])) ||
         push!(features, "retrofits (retrofit options become independent new plants)")
-    isempty(features) || @warn "These GenX thermal features are not converted: " *
-                               "$(join(features, ", "))."
+    isempty(features) || push!(messages, "These GenX thermal features are not converted: " *
+                                         "$(join(features, ", ")).")
+
+    # Macro applies the steady-state capture rate to start-up fuel too.
+    startup = filter(y -> GenX.co2_capture_fraction_startup(gen[y]) !=
+                          GenX.co2_capture_fraction(gen[y]), ccs_thermal(inputs))
+    isempty(startup) || push!(messages, "CO2_Capture_Fraction_Startup differs from " *
+                                        "CO2_Capture_Fraction, but Macro applies one capture " *
+                                        "rate, so start-up emissions differ from GenX for: " *
+                                        "$(resource_names(inputs, startup)).")
+    return messages
+end
+
+"""
+    warn_unsupported(loaded)
+
+Warn about what the Macro case leaves out, once per message across the loaded stages. In a
+multi-stage case, a message that only some stages give names them.
+"""
+function warn_unsupported(loaded)
+    messages = String[]
+    stages = Dict{String, Vector{Any}}()
+    for s in loaded, message in unsupported_warnings(s.inputs, s.setup)
+        haskey(stages, message) || push!(messages, message)
+        push!(get!(stages, message, Any[]), s.stage)
+    end
+    for message in messages
+        st = stages[message]
+        if length(st) < length(loaded)
+            message *= " In stage$(length(st) == 1 ? "" : "s") $(join(st, ", "))."
+        end
+        @warn message
+    end
     return nothing
 end
+
+"Names of the resources `ids`, comma-separated."
+resource_names(inputs::Dict, ids) = join((inputs["RESOURCES"][y].resource for y in ids), ", ")
 
 """
     fuel_commodity(fuel)

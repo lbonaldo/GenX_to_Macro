@@ -63,3 +63,15 @@
         end
     end
 end
+
+@testset "Example 6: a warning that only a later stage gives" begin
+    case = example_case("6_three_zones_w_multistage"; CO2Cap = 1)
+    set_resource_values!(joinpath(case, "inputs", "inputs_p2"), "Thermal.csv", 1, "Maint" => 1)
+    logs, _ = Test.collect_test_logs() do
+        convert_quietly(case, joinpath(mktempdir(), "macro"))
+    end
+    warnings = [string(l.message) for l in logs if l.level == Logging.Warn]
+    @test count(==("These GenX thermal features are not converted: maintenance. In stage 2."),
+        warnings) == 1
+    @test allunique(warnings)
+end

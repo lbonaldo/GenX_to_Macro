@@ -55,14 +55,14 @@ function set_resource_values!(case::AbstractString, file::AbstractString, row::I
     return nothing
 end
 
-"Convert a case into a fresh temporary folder, hiding GenX's console output; return the folder."
-function convert_case(case::AbstractString)
-    out = joinpath(mktempdir(), "macro")
+"Convert a case into `out`, hiding GenX's console output."
+convert_quietly(case::AbstractString, out::AbstractString) =
     redirect_stdout(devnull) do
         convert_genx_case(case, out)
     end
-    return out
-end
+
+"Convert a case into a fresh temporary folder, hiding GenX's console output; return the folder."
+convert_case(case::AbstractString) = convert_quietly(case, joinpath(mktempdir(), "macro"))
 
 """
     load_in_macro(macro_case)

@@ -71,7 +71,8 @@ end
     case = example_case("3_three_zones_w_co2_capture")
     cp(joinpath(EXAMPLES, "4_three_zones_w_policies_slack", "policies", "CO2_cap_slack.csv"),
         joinpath(case, "policies", "CO2_cap_slack.csv"); force = true)
-    out = @test_logs (:warn, r"CO2_Capture_Fraction_Startup") match_mode = :any convert_case(case)
+    # One warning for all the plants, and a single-stage warning names no stage.
+    out = @test_logs (:warn, r"^CO2_Capture_Fraction_Startup differs.*for: [^.]*\.$") match_mode = :any convert_case(case)
     setup, inputs = load_quietly(case)
 
     @test "CO2Captured" in read_json(out, "system/commodities.json")[:commodities]

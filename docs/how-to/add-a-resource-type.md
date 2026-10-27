@@ -67,7 +67,7 @@ single-stage and multi-stage cases.
    `COMMODITY_ORDER` and `case_commodities` in `commodities.jl`, and create its nodes in
    `nodes.jl`.
 
-5. Remove the resource type from the "not converted" list in `check_supported`
+5. Remove the resource type from the "not converted" list in `unsupported_warnings`
    (`src/utilities.jl`), so the converter stops warning about it.
 
 6. Add a test that converts a GenX example containing the resource and checks the fields

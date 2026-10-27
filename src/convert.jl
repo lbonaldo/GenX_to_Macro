@@ -8,7 +8,8 @@ set of system files per `inputs/inputs_p<n>` stage folder, plus `case_settings.j
 the GenX multi-stage settings. Any other case is converted once.
 
 Every stage is loaded and checked before anything is written, so an unsupported feature stops
-the conversion without leaving a partial case behind.
+the conversion without leaving a partial case behind. Warnings about what the Macro case leaves
+out are given once, naming the stages when not all have it.
 """
 function convert_genx_case(genx_case::AbstractString, macro_case::AbstractString)
     settings = GenX.configure_settings(
@@ -27,11 +28,12 @@ function convert_genx_case(genx_case::AbstractString, macro_case::AbstractString
         stages = [(nothing, genx_case)]
     end
 
-    loaded = map(enumerate(stages)) do (i, (stage, path))
+    loaded = map(stages) do (stage, path)
         setup, inputs = load_genx_case(genx_case, path)
-        check_supported(inputs, setup; warn = i == 1)
+        check_supported(inputs, setup; warn = false)
         (stage = stage, path = path, setup = setup, inputs = inputs)
     end
+    warn_unsupported(loaded)
     commodities = union((case_commodities(s.inputs) for s in loaded)...)
 
     make_macro_dir(macro_case, [s.stage for s in loaded])

@@ -22,11 +22,14 @@ no partial Macro case behind.
 
 ## Warnings
 
+In a multi-stage case each warning is given once. A warning that applies to only some stages
+ends with them, for example `In stage 2.`
+
 | Message starts with | What to do |
 |---|---|
 | `These active GenX settings are not converted` | The listed policies or options (for example `MinCapReq`, `DC_OPF`) are missing from the Macro case. To compare the two models, switch them off in the GenX case. |
 | `These GenX resource types are not converted` | The listed resources (co-located VRE and storage, flexible demand, electrolyzers, Allam cycle) are missing from the Macro case. Remove them from the GenX case for a comparison, or add support for them. |
 | `Only thermal plants burn fuel in the Macro case` | The listed resources are not thermal but have a fuel and a heat rate, so GenX counts their fuel use, emissions and any CO2 capture. The Macro case leaves all three out. To burn fuel in Macro, model them as thermal plants in the GenX case. |
 | `These GenX thermal features are not converted` | Piecewise fuel usage: the plants burn fuel at their `Heat_Rate_MMBTU_per_MWh` instead of the piecewise curve, so set that heat rate to match. Maintenance: the plants run without maintenance outages. Retrofits: existing plants can only retire, and retrofit options are built as new plants with no limit from the retired capacity. For a comparison, switch the features off in the GenX case. |
-| `<plant>: CO2_Capture_Fraction_Startup differs from CO2_Capture_Fraction` | Macro uses one capture rate, so start-up emissions differ from GenX. Set the two equal in the GenX case for a like-for-like comparison. |
+| `CO2_Capture_Fraction_Startup differs from CO2_Capture_Fraction` | Macro uses one capture rate, so start-up emissions of the listed plants differ from GenX. Set the two equal in the GenX case for a like-for-like comparison. |
 | `Could not find: "locations.json"` (from Macro) | No action needed. Macro requires the entry in `system_data.json`; the converted case has no locations. |

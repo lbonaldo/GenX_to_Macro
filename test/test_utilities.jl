@@ -80,4 +80,14 @@ end
         merge(inputs, Dict("MULTI_FUELS" => [1])), ok; warn = false)
     @test_logs (:warn, r"MinCapReq, DC_OPF") check_supported(inputs,
         merge(ok, Dict("MinCapReq" => 1, "DC_OPF" => 1)))
+
+    # Across stages, a warning is given once and names the stages only when not all have it.
+    stage(n, setup) = (stage = n, inputs = inputs, setup = setup)
+    policy = merge(ok, Dict("MinCapReq" => 1))
+    @test_logs (:warn, r"MinCapReq\.$") G2M.warn_unsupported([stage(nothing, policy)])
+    @test_logs (:warn, r"MinCapReq\.$") G2M.warn_unsupported([stage("1", policy), stage("2", policy)])
+    @test_logs (:warn, r"MinCapReq\. In stage 2\.$") G2M.warn_unsupported(
+        [stage("1", ok), stage("2", policy), stage("3", ok)])
+    @test_logs (:warn, r"MinCapReq\. In stages 2, 3\.$") G2M.warn_unsupported(
+        [stage("1", ok), stage("2", policy), stage("3", policy)])
 end

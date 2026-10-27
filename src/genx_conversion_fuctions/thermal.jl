@@ -52,20 +52,15 @@ function write_thermal(inputs::Dict, t::Target, ids, ccs::Bool)
         capacity_constraints!(constraints, GenX.min_cap_mw(r), GenX.max_cap_mw(r))
 
         # Rates per MWh of fuel. As in GenX, the biomass share of the fuel's CO2 is not
-        # emitted, and a CCS plant captures its capture fraction.
+        # emitted, and a CCS plant captures its capture fraction (also of start-up fuel, where
+        # GenX uses CO2_Capture_Fraction_Startup; the converter warns when the two differ).
         fuel_co2 = inputs["fuel_CO2"][r.fuel] / conv_mmbtu_to_mwh
         capture = ccs ? GenX.co2_capture_fraction(r) : 0.0
         transforms = Dict{String, Any}(
             "timedata" => fuel_type,
             "emission_rate" => (1 - GenX.biomass(r) - capture) * fuel_co2,
             "fuel_consumption" => conv_mmbtu_to_mwh * r.heat_rate_mmbtu_per_mwh)
-        if ccs
-            transforms["capture_rate"] = capture * fuel_co2
-            GenX.co2_capture_fraction_startup(r) == capture ||
-                @warn "$(r.resource): CO2_Capture_Fraction_Startup differs from " *
-                      "CO2_Capture_Fraction. Macro applies one capture rate, so start-up " *
-                      "emissions will differ from GenX."
-        end
+        ccs && (transforms["capture_rate"] = capture * fuel_co2)
 
         elec_edge = Dict{String, Any}(
             "end_vertex" => "elec_" * r.region,
