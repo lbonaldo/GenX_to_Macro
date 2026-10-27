@@ -4,8 +4,9 @@
 Convert the GenX case in `genx_case` into a Macro case in `macro_case`.
 
 A multi-stage case (`MultiStage: 1`) becomes a multi-period Macro case: one asset folder and one
-set of system files per `inputs/inputs_p<n>` stage folder, plus `case_settings.json` built from
-the GenX multi-stage settings. Any other case is converted once.
+set of system files per stage, read from `inputs/inputs_p1` to `inputs/inputs_p<NumStages>` as
+in GenX, plus `case_settings.json` built from the GenX multi-stage settings. Any other case is
+converted once.
 
 Every stage is loaded and checked before anything is written, so an unsupported feature stops
 the conversion without leaving a partial case behind. Warnings about what the Macro case leaves
@@ -18,12 +19,9 @@ function convert_genx_case(genx_case::AbstractString, macro_case::AbstractString
     multistage = settings["MultiStage"] == 1
 
     if multistage
-        inputs_dir = joinpath(genx_case, "inputs")
-        folders = filter(d -> isdir(joinpath(inputs_dir, d)) && occursin(r"^inputs_p\d+$", d),
-            readdir(inputs_dir))
-        isempty(folders) && error("No inputs_p<n> stage folders found in $inputs_dir.")
-        sort!(folders, by = d -> parse(Int, get_stage_number(d)))
-        stages = [(get_stage_number(d), joinpath(inputs_dir, d)) for d in folders]
+        ms = GenX.configure_settings_multistage(
+            GenX.get_settings_path(genx_case, "multi_stage_settings.yml"))
+        stages = stage_folders(genx_case, ms)
     else
         stages = [(nothing, genx_case)]
     end
@@ -51,6 +49,6 @@ function convert_genx_case(genx_case::AbstractString, macro_case::AbstractString
         make_mustrun_json(s.inputs, s.setup, t)
         make_hydro_json(s.inputs, s.setup, t)
     end
-    multistage && make_case_settings_json(genx_case, macro_case)
+    multistage && make_case_settings_json(ms, settings, macro_case)
     return macro_case
 end

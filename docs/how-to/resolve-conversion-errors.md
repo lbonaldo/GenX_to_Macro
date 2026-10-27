@@ -18,7 +18,8 @@ no partial Macro case behind.
 | `<plant> uses fuel '<name>', which has no Macro commodity` | Rename the fuel, in `Fuels_data.csv` and the plant's `Fuel` column, so the converter recognises it (case does not matter): natural gas contains `gas`, contains `_NG` or is `NG`; coal contains `coal`; uranium contains `uranium` or `nuclear`. Any other fuel needs a new commodity in the converter: see [Add a GenX resource type](add-a-resource-type.md). |
 | `Zone <z> belongs to CO2 caps [...]` | Put each zone in at most one cap in `CO2_cap.csv`. |
 | `TimeDomainReduction is on but .../Period_map.csv does not exist` | Run the case in GenX once so it writes its clustered data, or set `TimeDomainReduction: 0`. |
-| `No inputs_p<n> stage folders found` | A multi-stage case needs its stages in `inputs/inputs_p1`, `inputs/inputs_p2`, …. |
+| `multi_stage_settings.yml sets NumStages = <n> but gives <m> StageLengths` | Give one length in `StageLengths` per stage. |
+| `NumStages = <n>, but these stage folders do not exist` | A multi-stage case needs its stages in `inputs/inputs_p1` to `inputs/inputs_p<n>`. Add the listed folders, or lower `NumStages`. |
 
 ## Warnings
 

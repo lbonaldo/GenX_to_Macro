@@ -6,8 +6,20 @@
     @test G2M.asset_file(stage2, "vre") == "assets/assets_2/vre.json"
     @test G2M.system_file(single, "demand", "csv") == "system/demand.csv"
     @test G2M.system_file(stage2, "demand", "csv") == "system/demand_2.csv"
-    @test get_stage_number("inputs_p12") == "12"
-    @test_throws ErrorException get_stage_number("inputs")
+end
+
+@testset "Stage folders" begin
+    case = mktempdir()
+    foreach(p -> mkpath(joinpath(case, "inputs", "inputs_p$p")), 1:3)
+    folder(p) = joinpath(case, "inputs", "inputs_p$p")
+    # Stages 1 to NumStages, as in GenX; a further stage folder is left out.
+    stages = @test_logs (:info, r"Not converting inputs_p3") G2M.stage_folders(case,
+        Dict("NumStages" => 2, "StageLengths" => [10, 10]))
+    @test stages == [("1", folder(1)), ("2", folder(2))]
+    @test_throws r"NumStages = 3 but gives 2 StageLengths" G2M.stage_folders(case,
+        Dict("NumStages" => 3, "StageLengths" => [10, 10]))
+    @test_throws r"stage folders do not exist: .*inputs_p4" G2M.stage_folders(case,
+        Dict("NumStages" => 4, "StageLengths" => [10, 10, 10, 10]))
 end
 
 @testset "Fuel commodities" begin

@@ -64,6 +64,26 @@
     end
 end
 
+@testset "Example 6: stages follow NumStages" begin
+    case = example_case("6_three_zones_w_multistage"; CO2Cap = 1)
+    set_setting!(case, "multi_stage_settings.yml", "NumStages", 2)
+    set_setting!(case, "multi_stage_settings.yml", "StageLengths", "[10, 10]")
+    out = joinpath(mktempdir(), "macro")
+    @test_logs (:info, r"Not converting inputs_p3") match_mode = :any convert_quietly(case, out)
+    @test length(read_json(out, "system_data.json")[:case]) == 2
+    @test read_json(out, "settings/case_settings.json")[:PeriodLengths] == [10, 10]
+    @test length(load_in_macro(out).systems) == 2
+
+    # A missing stage, or StageLengths that do not match NumStages, stop before writing.
+    fresh = joinpath(mktempdir(), "macro")
+    set_setting!(case, "multi_stage_settings.yml", "NumStages", 3)
+    @test_throws r"NumStages = 3 but gives 2 StageLengths" convert_quietly(case, fresh)
+    set_setting!(case, "multi_stage_settings.yml", "StageLengths", "[10, 10, 10]")
+    rm(joinpath(case, "inputs", "inputs_p3"); recursive = true)
+    @test_throws r"stage folders do not exist: .*inputs_p3" convert_quietly(case, fresh)
+    @test !isdir(fresh)
+end
+
 @testset "Example 6: a warning that only a later stage gives" begin
     case = example_case("6_three_zones_w_multistage"; CO2Cap = 1)
     set_resource_values!(joinpath(case, "inputs", "inputs_p2"), "Thermal.csv", 1, "Maint" => 1)

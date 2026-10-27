@@ -54,7 +54,8 @@ and optionally runs both models.
    - single-stage: `assets/<type>.json`, `system/*.json` and `system/*.csv`
    - multi-stage: `assets/assets_<n>/` and `system/<file>_<n>` for each stage, plus
      `settings/case_settings.json` with the period lengths, discount rate and foresight taken
-     from the GenX settings
+     from the GenX settings. As in GenX, the stages are `inputs/inputs_p1` to
+     `inputs/inputs_p<NumStages>`; any further stage folder is left out.
 
 5. Run Macro on it, if the script has not already:
 

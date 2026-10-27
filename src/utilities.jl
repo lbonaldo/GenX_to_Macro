@@ -338,34 +338,47 @@ function make_macro_dir(macro_case::AbstractString, stages::AbstractVector)
 end
 
 """
-    make_case_settings_json(genx_case_path, macro_case)
+    make_case_settings_json(multistage_settings, settings, macro_case)
 
-Write Macro's `case_settings.json` from the GenX case's settings, so period lengths, the
-discount rate, foresight and parameter scaling match the GenX run. The multi-stage settings
-are read through GenX itself, which applies its defaults and accepts the old `WACC` name for
-the discount rate.
+Write Macro's `case_settings.json` from the GenX multi-stage settings and `genx_settings.yml`
+settings, so period lengths, the discount rate, foresight and parameter scaling match the GenX
+run. The multi-stage settings are those GenX reads, with its defaults and the old `WACC` name
+for the discount rate accepted.
 """
-function make_case_settings_json(genx_case_path::AbstractString, macro_case::AbstractString)
-    ms = GenX.configure_settings_multistage(
-        GenX.get_settings_path(genx_case_path, "multi_stage_settings.yml"))
-    genx = GenX.configure_settings(
-        GenX.get_settings_path(genx_case_path, "genx_settings.yml"),
-        GenX.get_settings_path(genx_case_path, "output_settings.yml"))
-
+function make_case_settings_json(ms::Dict, settings::Dict, macro_case::AbstractString)
     case_settings = Dict(
         "PeriodLengths" => ms["StageLengths"],
         "DiscountRate" => ms["DiscountRate"],
         "ExpansionHorizon" => ms["Myopic"] == 1 ? "Myopic" : "PerfectForesight",
         "SolutionAlgorithm" => "Monolithic",
-        "ParameterScaling" => genx["ParameterScale"] == 1)
+        "ParameterScaling" => settings["ParameterScale"] == 1)
 
     write_json(joinpath(macro_case, "settings", "case_settings.json"), case_settings)
     return nothing
 end
 
-"Stage number at the end of a stage folder name, e.g. `\"2\"` for `inputs_p2`."
-function get_stage_number(stage_folder::AbstractString)
-    m = match(r"\d+$", stage_folder)
-    m === nothing && error("Stage folder '$stage_folder' does not end in a stage number.")
-    return m.match
+"""
+    stage_folders(genx_case, multistage_settings)
+
+Stage numbers and input folders of a multi-stage case: `inputs/inputs_p1` to
+`inputs/inputs_p<NumStages>`, the stages GenX runs. Stops when one of them is missing or when
+`StageLengths` does not give one length per stage.
+"""
+function stage_folders(genx_case::AbstractString, ms::Dict)
+    n = ms["NumStages"]
+    length(ms["StageLengths"]) == n ||
+        error("multi_stage_settings.yml sets NumStages = $n but gives " *
+              "$(length(ms["StageLengths"])) StageLengths; give one length per stage.")
+    inputs_dir = joinpath(genx_case, "inputs")
+    folders = [joinpath(inputs_dir, "inputs_p$p") for p in 1:n]
+    absent = filter(!isdir, folders)
+    isempty(absent) || error("NumStages = $n, but these stage folders do not exist: " *
+                             "$(join(absent, ", ")).")
+    unused = filter(readdir(inputs_dir)) do d
+        m = match(r"^inputs_p(\d+)$", d)
+        m !== nothing && parse(Int, m[1]) > n
+    end
+    isempty(unused) || @info "Not converting $(join(unused, ", ")): NumStages = $n, and GenX " *
+                             "skips them too."
+    return [(string(p), folders[p]) for p in 1:n]
 end

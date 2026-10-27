@@ -21,7 +21,6 @@ export make_mustrun_json
 export make_storage_json
 export make_hydro_json
 export make_transmission_json
-export get_stage_number
 
 const conv_mmbtu_to_mwh = 0.29307107
 
